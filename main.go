@@ -1,22 +1,42 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/dapoulsen/gator/internal/config"
 )
+
+type state struct {
+	cfg *config.Config
+}
 
 func main() {
 	cfg, err := config.Read()
 	if err != nil {
 		os.Exit(0)
 	}
-	cfg.SetUser("daniel")
 
-	cfg, err = config.Read()
-	if err != nil {
-		os.Exit(0)
+	programState := &state{
+		cfg: &cfg,
 	}
-	fmt.Printf("Struct db url: %s\nConfig username: %s\n", cfg.DBURL, cfg.CurrentUserName)
+
+	cmds := commands{
+		handledCommands: make(map[string]func(*state, command) error),
+	}
+
+	cmds.register("login", handlerLogin)
+
+	if len(os.Args) < 2 {
+		log.Fatal("Need: cli <command> [args...]")
+	}
+
+	cmdName := os.Args[1]
+	cmdArgs := os.Args[2:]
+
+	err = cmds.run(programState, command{Name: cmdName, Args: cmdArgs})
+	if err != nil {
+		log.Fatal(err)
+	}
+
 }
