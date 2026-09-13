@@ -27,7 +27,7 @@ func handlerLogin(s *state, cmd command) error {
 		return fmt.Errorf("couldn't set current user: %w", err)
 	}
 
-	fmt.Println("The user has been set with username: ", cmd.Args[0])
+	fmt.Println("user have been switched to: ", cmd.Args[0])
 	return nil
 }
 
@@ -59,6 +59,24 @@ func handlerRegister(s *state, cmd command) error {
 
 	return nil
 
+}
+
+func handlerUsers(s *state, cmd command) error {
+	users, err := s.db.GetUsers(context.Background())
+	if err != nil {
+		fmt.Println("Error getting users")
+		return err
+	}
+
+	for _, user := range users {
+		if s.cfg.CurrentUserName == user.Name {
+			fmt.Println("*  " + user.Name + " (current)")
+		} else {
+			fmt.Println("* ", user.Name)
+		}
+	}
+
+	return nil
 }
 
 func handlerReset(s *state, cmd command) error {
