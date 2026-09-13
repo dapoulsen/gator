@@ -1,13 +1,18 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"os"
 
 	"github.com/dapoulsen/gator/internal/config"
+	"github.com/dapoulsen/gator/internal/database"
+
+	_ "github.com/lib/pq"
 )
 
 type state struct {
+	db  *database.Queries
 	cfg *config.Config
 }
 
@@ -17,8 +22,16 @@ func main() {
 		os.Exit(0)
 	}
 
+	db, err := sql.Open("postgres", cfg.DBURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dbQueries := database.New(db)
+
 	programState := &state{
 		cfg: &cfg,
+		db:  dbQueries,
 	}
 
 	cmds := commands{
@@ -26,6 +39,7 @@ func main() {
 	}
 
 	cmds.register("login", handlerLogin)
+	cmds.register("register", handlerRegister)
 
 	if len(os.Args) < 2 {
 		log.Fatal("Need: cli <command> [args...]")
